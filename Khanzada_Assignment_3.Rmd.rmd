@@ -1,0 +1,147 @@
+```{r}
+# ==============================================================================
+# 📊 ASSIGNMENT 3: REGRESSION ANALYSIS IN R
+# Using the same TESLA vs NISSAN simulated dataset from Assignment 2
+# ==============================================================================
+
+# --- 1. Load or simulate the dataset (same as Assignment 2) --------------------
+
+set.seed(42)
+
+CATEGORICAL_VAR <- "Make"
+NUMERICAL_VAR <- "Electric.Range"
+
+nissan_data <- data.frame(
+  Make = rep("NISSAN", 500),
+  Electric.Range = round(rnorm(500, mean = 150, sd = 25))
+)
+
+tesla_data <- data.frame(
+  Make = rep("TESLA", 500),
+  Electric.Range = round(rnorm(500, mean = 250, sd = 40))
+)
+
+df <- rbind(nissan_data, tesla_data)
+df$Make <- factor(df$Make)
+
+# --- NEW VARIABLE for Regression ----------------------------------------------
+
+df$Battery.Size.kWh <- ifelse(
+  df$Make == "TESLA",
+  rnorm(500, mean = 80, sd = 10),
+  rnorm(500, mean = 50, sd = 8)
+)
+
+# --- 2. Exploratory Data Analysis (EDA) ----------------------------------------
+
+print("===== SUMMARY STATISTICS =====")
+print(summary(df))
+
+print("===== CORRELATION (Range vs Battery Size) =====")
+print(cor(df$Electric.Range, df$Battery.Size.kWh))
+
+hist(df$Electric.Range,
+     main = "Distribution of Electric Range",
+     xlab = "Range (miles)")
+
+boxplot(Electric.Range ~ Make, data = df,
+        main = "Range by EV Manufacturer",
+        ylab = "Electric Range")
+
+plot(df$Battery.Size.kWh, df$Electric.Range,
+     main = "Battery Size vs Electric Range",
+     xlab = "Battery Size (kWh)",
+     ylab = "Range (miles)")
+
+# --- 3. Build Regression Model -------------------------------------------------
+
+model <- lm(Electric.Range ~ Battery.Size.kWh + Make, data = df)
+
+print("===== REGRESSION MODEL SUMMARY =====")
+print(summary(model))
+
+# --- 4. Model Evaluation -------------------------------------------------------
+
+plot(model$residuals,
+     main = "Residual Plot",
+     ylab = "Residuals")
+
+hist(model$residuals,
+     main = "Residual Distribution",
+     xlab = "Residuals")
+
+shapiro_test <- shapiro.test(model$residuals)
+print("===== SHAPIRO NORMALITY TEST =====")
+print(shapiro_test)
+
+RMSE <- sqrt(mean(model$residuals^2))
+print(paste("RMSE:", round(RMSE, 3)))
+
+# --- 5. Make Predictions -------------------------------------------------------
+
+new_data <- data.frame(
+  Battery.Size.kWh = c(40, 60, 80, 95),
+  Make = factor(c("NISSAN", "NISSAN", "TESLA", "TESLA"))
+)
+
+predictions <- predict(model, newdata = new_data)
+
+print("===== PREDICTED ELECTRIC RANGES =====")
+print(data.frame(new_data, Predicted.Range = round(predictions, 1)))
+
+# ==============================================================================
+```
+
+
+# ==============================================================================
+# 📄 WRITE-UP
+# Author: Bushra Khanzada
+# Date: 11/30/2025
+# Assignment 3: Regression Analysis of Electric Vehicle Range
+# ------------------------------------------------------------------------------
+# Electric vehicle range is an important factor for both consumers and manufacturers, 
+# as it affects driving convenience and vehicle design. For this assignment, I looked 
+# at a simulated dataset of 1,000 electric vehicles—500 TESLA and 500 NISSAN—to 
+# understand what affects electric range and to build a regression model that could 
+# predict it. I focused on two factors: the manufacturer (TESLA or NISSAN) and battery 
+# size, measured in kilowatt-hours (kWh), with electric range in miles as the outcome variable.
+# 
+# Looking at the data, it was clear that TESLA vehicles had much higher ranges than 
+# NISSAN vehicles. On average, TESLA EVs reached about 250 miles, while NISSAN EVs 
+# averaged roughly 150 miles. There was also a fairly strong correlation of 0.71 
+# between battery size and range, which made sense since larger batteries generally 
+# allow cars to travel farther. I created some basic visualizations to explore the 
+# data further. A histogram of electric range showed that the two manufacturers formed 
+# two distinct clusters, and a boxplot confirmed that TESLA vehicles consistently had 
+# higher ranges. A scatterplot of battery size against electric range suggested a positive 
+# relationship, but the difference between manufacturers seemed to be the dominant factor.
+# 
+# Next, I built a linear regression model with electric range as the dependent variable 
+# and manufacturer and battery size as predictors. The model showed that being a TESLA 
+# was associated with about 100 miles more range compared to a NISSAN, which was highly 
+# significant statistically. Battery size, surprisingly, was not significant in this dataset, 
+# likely because the manufacturer effect was so strong that it overshadowed any smaller 
+# differences caused by battery size. The model explained around 68% of the variation in 
+# electric range, which seemed reasonable given the simplicity of the dataset.
+# 
+# To check how well the model performed, I looked at residuals and ran a Shapiro-Wilk 
+# test for normality. The residual plots and histogram didn’t show any major issues, 
+# though the normality test indicated a slight deviation, which is acceptable given the 
+# large sample size. The root mean squared error was about 34 miles, meaning predictions 
+# are usually within that range of the actual values—again, reasonable for this simulated data.
+# 
+# Finally, I used the model to predict electric range for some hypothetical vehicles. 
+# NISSAN vehicles with 40 and 60 kWh batteries were predicted to have ranges of 149.2 
+# and 149.3 miles, respectively. TESLA vehicles with 80 and 95 kWh batteries were predicted 
+# to have ranges of 249.2 miles in both cases. These predictions reinforced that manufacturer 
+# is the biggest factor: TESLA EVs consistently have about 100 miles more range than NISSAN 
+# EVs, regardless of battery size.
+# 
+# Overall, this analysis shows that manufacturer is the main driver of electric range in this 
+# dataset, while battery size has a smaller effect. The model provides reasonable predictions 
+# and helps illustrate how vehicle design differences can influence performance. In a real-world 
+# dataset, other variables like vehicle weight, motor efficiency, or aerodynamics could also be 
+# included to improve predictions. This exercise helped me understand both regression modeling 
+# and the importance of exploring data carefully before drawing conclusions.
+# ==============================================================================
+
